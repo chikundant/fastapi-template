@@ -1,46 +1,33 @@
-FROM python:3.11 as builder
+FROM python:3.11-slim as base
 
-# Setup env
-ENV LANG C.UTF-8
-ENV LC_ALL C.UTF-8
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONFAULTHANDLER 1
-ENV PYROOT /pyroot
-ENV PYTHONUSERBASE $PYROOT
+WORKDIR /tmp
 
-RUN env
+RUN pip install poetry
 
+COPY ./pyproject.toml ./poetry.lock* /tmp/
 
-FROM builder AS base
+RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
 
-# Install pipenv and compilation dependencies
-RUN pip install --no-cache pipenv
-
-COPY Pipfile .
-COPY Pipfile.lock .
-RUN PIP_USER=1 PIP_IGNORE_INSTALLED=1 pipenv install --system --deploy
-
-FROM base AS base-dev
-
-RUN PIP_USER=1 PIP_IGNORE_INSTALLED=1 pipenv install --system --deploy --dev
-
-FROM base-dev AS dev
-
-COPY --from=base-dev $PYROOT/lib/ $PYROOT/lib/
+FROM base as base-requirements
 
 WORKDIR /app
 
-COPY entrypoint.dev.sh .
-RUN chmod +x entrypoint.dev.sh
-RUN pip3 install --no-cache-dir awscli
+COPY --from=base /tmp/requirements.txt /requirements.txt
 
-RUN mkdir -p /app/system_configs
-RUN env
+ENV PYTHONPATH=./
 
-# Install application into container
+RUN pip install --no-cache-dir --upgrade -r /requirements.txt
+
+FROM base-requirements as dev
+ARG GIT_HASH
+ARG GIT_BRANCH
+ARG GIT_TAG
+ENV GIT_HASH=${GIT_HASH}
+ENV GIT_BRANCH=${GIT_BRANCH}
+ENV GIT_TAG=${GIT_TAG}
+
+WORKDIR /app
+
 COPY . .
 
-RUN rm -rf /parser/system_configs
-
-# Run the application
-CMD ["sh", "/app/entrypoint.dev.sh"]
+ENTRYPOINT ["python", "app/run.py"]
