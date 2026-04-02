@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from app import lifespan, settings, setup_routers
+from app import lifespan, settings
 
 app = FastAPI(lifespan=lifespan)
 

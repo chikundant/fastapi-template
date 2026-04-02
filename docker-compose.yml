@@ -6,11 +6,11 @@ services:
       context: .
       dockerfile: Dockerfile
       target: dev
-    container_name: otel-sentry-app
+    container_name: fastapi-template-app
     ports:
       - "8001:8001"
     env_file:
-      - system_configs/.env
+      - .env
     depends_on:
       - db
     volumes:
@@ -18,7 +18,7 @@ services:
 
   db:
     image: postgres:15.4
-    container_name: otel-sentry-db
+    container_name: fastapi-template-db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
@@ -26,7 +26,7 @@ services:
     ports:
       - "5434:5432"
     volumes:
-      - otel-sentry-db-data:/var/lib/postgresql/data
+      - fastapi-template-db-data:/var/lib/postgresql/data
 
 volumes:
-  otel-sentry-db-data:
+  fastapi-template-db-data:

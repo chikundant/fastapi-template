@@ -2,11 +2,11 @@ FROM python:3.11-slim as base
 
 WORKDIR /tmp
 
-RUN pip install poetry
+RUN pip install uv
 
-COPY ./pyproject.toml ./poetry.lock* /tmp/
+COPY ./pyproject.toml ./uv.lock* /tmp/
 
-RUN poetry export -f requirements.txt --output requirements.txt --without-hashes
+RUN uv export --format requirements.txt --output-file requirements.txt
 
 FROM base as base-requirements
 
@@ -15,6 +15,8 @@ WORKDIR /app
 COPY --from=base /tmp/requirements.txt /requirements.txt
 
 ENV PYTHONPATH=./
+
+RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir --upgrade -r /requirements.txt
 

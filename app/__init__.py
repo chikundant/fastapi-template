@@ -20,4 +20,4 @@ def setup_routers(app: FastAPI):
     api_v1_router = provide_api_v1_router()
     api_router = APIRouter()
     api_router.include_router(api_v1_router, prefix="/api/v1")
-    app.include_router(api_router, prefix='/otel-sentry')
+    app.include_router(api_router, prefix="/fastapi-template")
