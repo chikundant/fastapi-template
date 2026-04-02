@@ -13,10 +13,12 @@ dependencies = [
     "orjson>=3.11.8",
     "langchain>=1.2.14",
     "sqlalchemy>=2.0.48",
+    "langchain-openai>=1.1.12",
 ]
 
 [dependency-groups]
 dev = [
+    "langgraph-cli[inmem]>=0.4.19",
     "pytest>=9.0.2",
     "ruff>=0.15.8",
 ]
