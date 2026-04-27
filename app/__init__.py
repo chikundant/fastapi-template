@@ -11,17 +11,11 @@ settings = Settings()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # app.state.db_pool = await provide_async_db_pool(settings.db)
-    import asyncpg
+    app.state.db_pool = await provide_async_db_pool(settings.db)
 
-    conn = await asyncpg.connect(
-        "postgresql://postgres:password@172.22.0.2:5432/postgres"
-    )
-    print("CONNECTED")
-    await conn.close()
     yield
 
-    # await close_db_pool(app)
+    await close_db_pool(app)
 
 
 def create_app() -> FastAPI:

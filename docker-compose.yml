@@ -14,7 +14,8 @@ services:
       - db
     volumes:
       - .:/app
-
+    networks:
+      - fastapi-template
   db:
     image: postgres:15.4
     container_name: fastapi-template-db
@@ -26,6 +27,11 @@ services:
       - "5434:5432"
     volumes:
       - fastapi-template-db-data:/var/lib/postgresql/data
-
+    networks:
+      - fastapi-template
+      
 volumes:
   fastapi-template-db-data:
+
+networks:
+  fastapi-template:
