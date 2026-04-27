@@ -1,23 +1,27 @@
-from fastapi import FastAPI, APIRouter
-
-from app.core.settings import Settings
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI
+
+from app.core.settings import Settings
+from app.db.session import close_db_pool, provide_async_db_pool
 from app.routers.rest import provide_api_v1_router
-from app.utils.sentry import init_sentry
 
 settings = Settings()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_sentry(settings)
-    setup_routers(app)
+    app.state.db_pool = await provide_async_db_pool(settings.db)
+
     yield
 
+    await close_db_pool(app)
 
-def setup_routers(app: FastAPI):
-    api_v1_router = provide_api_v1_router()
-    api_router = APIRouter()
-    api_router.include_router(api_v1_router, prefix="/api/v1")
-    app.include_router(api_router, prefix="/fastapi-template")
+
+def create_app() -> FastAPI:
+    app = FastAPI(title=settings.SERVICE_NAME, lifespan=lifespan)
+    app.include_router(provide_api_v1_router(), prefix="/api/v1")
+    return app
+
+
+app = create_app()

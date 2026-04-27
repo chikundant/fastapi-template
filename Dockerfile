@@ -1,34 +1,19 @@
-FROM python:3.11-slim as base
+FROM python:3.13-slim
 
-WORKDIR /tmp
+# Pull the uv binaries from Astral's official image — faster than `pip install uv`.
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
-RUN pip install uv
-
-COPY ./pyproject.toml ./uv.lock* /tmp/
-
-RUN uv export --format requirements.txt --output-file requirements.txt
-
-FROM base as base-requirements
-
-WORKDIR /app
-
-COPY --from=base /tmp/requirements.txt /requirements.txt
-
-ENV PYTHONPATH=./
-
-RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
-
-RUN pip install --no-cache-dir --upgrade -r /requirements.txt
-
-FROM base-requirements as dev
-ARG GIT_HASH
-ARG GIT_BRANCH
-ARG GIT_TAG
-ENV GIT_HASH=${GIT_HASH}
-ENV GIT_BRANCH=${GIT_BRANCH}
-ENV GIT_TAG=${GIT_TAG}
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PATH=/opt/venv/bin:$PATH
 
 WORKDIR /app
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
 COPY . .
 

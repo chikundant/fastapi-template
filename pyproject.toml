@@ -3,17 +3,20 @@ name = "fastapi-template"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.135.3",
     "uvicorn>=0.42.0",
-    "sentry-sdk (>=2.57.0,<3.0.0)",
     "pydantic-settings>=2.13.1",
     "pydantic>=2.12.5",
     "orjson>=3.11.8",
+    "sqlalchemy[asyncio]>=2.0.48",
+    "langgraph>=0.6.0",
     "langchain>=1.2.14",
-    "sqlalchemy>=2.0.48",
     "langchain-openai>=1.1.12",
+    "psycopg>=3.3.3",
+    "psycopg2-binary>=2.9.12",
+    "asyncpg>=0.31.0",
 ]
 
 [dependency-groups]

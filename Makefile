@@ -9,9 +9,9 @@ stop:
 	docker-compose -f $(DOCKER_COMPOSE_FILE) stop
 
 logs-app:
-	docker logs -f $(APP_NAME)-app
+	docker logs -f $(APP_NAME)
 
-verify:
+format:
 	uv run ruff format
 	uv run ruff check --fix
 	uv run pytest .
