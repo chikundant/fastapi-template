@@ -1,14 +1,13 @@
 import uvicorn
-from fastapi import FastAPI
-from app import lifespan, settings
 
-app = FastAPI(lifespan=lifespan)
+from app import settings
 
 if __name__ == "__main__":
     uvicorn.run(
-        app="app.run:app",
+        app="app:app",
         workers=settings.NUMBER_OF_WORKERS,
         host=settings.SERVICE_HOST,
         port=settings.SERVICE_PORT,
         reload=settings.RELOAD,
     )
+

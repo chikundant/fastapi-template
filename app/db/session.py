@@ -1,22 +1,18 @@
 import asyncio
 import json
-from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any, AsyncGenerator, Callable, Coroutine
+from typing import Any, AsyncGenerator
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
-
-from app.core.settings import DBSettings
-
-
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    create_async_engine,
+)
 from starlette.requests import HTTPConnection
 
-
-CoroutineType = Callable[[], Coroutine]
+from app.core.settings import DBSettings
 
 
 class AsyncDBPoolProvisionError(Exception):
@@ -39,8 +35,8 @@ async def provide_async_db_pool(  # type: ignore
                 echo=settings.ECHO,
                 pool_size=settings.POOL_SIZE,
                 max_overflow=settings.POOL_OVERFLOW,
-                pool_recycle=settings.POOL_RECYCLE,
                 json_serializer=lambda obj: json.dumps(obj, default=_db_json),
+                connect_args={"timeout": 5},
             )
             async with pool.begin() as conn:
                 await conn.execute(text("SELECT 1;"))
@@ -50,40 +46,12 @@ async def provide_async_db_pool(  # type: ignore
             if attempt < max_retries:
                 await asyncio.sleep(retry_interval)
             else:
-                raise AsyncDBPoolProvisionError(
-                    f"failed to connect to db at {settings.PATH}"
-                ) from exc
+                raise AsyncDBPoolProvisionError("failed to connect to db") from exc
 
 
-def init_db_pool(app: FastAPI, settings: DBSettings) -> CoroutineType:
-    async def _init() -> None:
-        pool = await provide_async_db_pool(settings)
-        app.state.db_pool = pool
-        # SQLAlchemyInstrumentor().instrument(
-        #     engine=pool.sync_engine, enable_commenter=True
-        # )
-
-    return _init
-
-
-def close_db_pool(app: FastAPI) -> CoroutineType:
-    async def _close() -> None:
-        if hasattr(app.state, "db_pool"):
-            await app.state.db_pool.dispose()
-
-    return _close
-
-
-@asynccontextmanager
-async def provide_db_pool(
-    settings: DBSettings,
-) -> AsyncGenerator[AsyncEngine, None]:
-    pool = await provide_async_db_pool(settings)
-
-    try:
-        yield pool
-    finally:
-        await pool.dispose()
+async def close_db_pool(app: FastAPI) -> None:
+    if hasattr(app.state, "db_pool"):
+        await app.state.db_pool.dispose()
 
 
 def _get_db_pool(request: HTTPConnection) -> AsyncEngine:
